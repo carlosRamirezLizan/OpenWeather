@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">openweather</string>
+    <string name="select_city">Selecciona una ciudad</string>
+    <string name="show_city_weather">Consultar tiempo</string>
+    <string name="weather_result">Información meteorológica</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="error_title_default">Error</string>
+    <string name="error_message_default">Ha ocurrido un error, inténtalo de nuevo</string>
+    <string name="ok">Ok</string>
+
+</resources>
