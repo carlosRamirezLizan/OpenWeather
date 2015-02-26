@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Created by Ignacio Rojas González and Carlos Ramírez Lizán on 16/01/2015
+ * Created by Carlos Ramírez Lizán on 16/01/2015
  * Narami Solutions Inc.
  */
 public class City {

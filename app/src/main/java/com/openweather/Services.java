@@ -1,68 +1,59 @@
 package com.openweather;
 
 import android.os.AsyncTask;
+
+import com.github.kevinsawicki.http.HttpRequest;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.openweather.entity.City;
 import com.openweather.entity.error.ApiError;
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.HashMap;
 
 /**
- * Created by Ignacio Rojas González and Carlos Ramírez Lizán on 16/01/2015
+ * Created by Carlos Ramírez Lizán on 16/01/2015
  * Narami Solutions Inc.
  */
 
 public class Services {
 
     private static final String GET_CITY_WEATHER_URL = "http://api.openweathermap.org/data/2.5/weather?q=";
-    private static final String GET_WEATHER_ICON_URL = "http://openweathermap.org/img/w/01n.png";
     public static final String GET_METHOD = "GET";
     private static final int TIMEOUT = 10000;
     private static final int TIMEOUT_READ = 15000;
 
     public static void loadCityWeather(final String city, final CompletionHandlerWithError completionHandlerWithError)
     {
-        performConnection(city, GET_CITY_WEATHER_URL, GET_METHOD, new ConnectionCompletionHandler() {
+        performConnection(city, GET_CITY_WEATHER_URL, new ConnectionCompletionHandler() {
             @Override
             public void call(Object response, HttpURLConnection connection, Exception exception)
             {
-                try {
-                    String body = (String) response;
-                    City city = null;
+                String body = (String) response;
+                City city = null;
+                ApiError error = null;
 
+                try {
                     Gson gson = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").create();
-                    ApiError error = null;
 
                     if (connection.getResponseCode() == HttpURLConnection.HTTP_OK && !body.isEmpty()) {
-                        city = gson.fromJson(body, new TypeToken<City>() {
-                        }.getType());
-
-                    }
-                    else if (connection.getResponseCode() >= 400){
+                        city = gson.fromJson(body, new TypeToken<City>() {}.getType());
                         error = gson.fromJson(body, new TypeToken<ApiError>() {}.getType());
                     }
-
+                    if (connection.getResponseCode() >= 400){
+                        error = gson.fromJson(body, new TypeToken<ApiError>() {}.getType());
+                    }
                     completionHandlerWithError.call(city != null, city, error);
                 }
                 catch (Exception e) {
                     e.printStackTrace();
-
-                    completionHandlerWithError.call(false, null, null);
+                    completionHandlerWithError.call(false, city, error);
                 }
             }
         });
     }
 
-
-    public static AsyncTask<Void, Void, HashMap<String, Object>> performConnection(final String city, final String urlString, final String method, final ConnectionCompletionHandler completionHandler)
+    public static AsyncTask<Void, Void, HashMap<String, Object>> performConnection(final String city, final String urlString, final ConnectionCompletionHandler completionHandler)
     {
         return new AsyncTask<Void, Void, HashMap<String, Object>>() {
             @Override
@@ -72,36 +63,17 @@ public class Services {
                 HttpURLConnection urlConnection = null;
                 Exception exception = null;
 
-                URL url;
-
                 try {
-                    url = new URL(urlString + city);
-
-                    urlConnection = (HttpURLConnection) url.openConnection();
-                    urlConnection.setConnectTimeout(TIMEOUT);
-                    urlConnection.setReadTimeout(TIMEOUT_READ);
-
-                    try {
-                        urlConnection.setRequestMethod(method);
-
-                        InputStream inputStream = new BufferedInputStream(urlConnection.getResponseCode() < 400 ? urlConnection.getInputStream() : urlConnection.getErrorStream());
-                        response = readStream(inputStream);
-                    }
-                    catch (Exception e) {
-                        exception = e;
-                        e.printStackTrace();
-                    }
-                    finally {
-                        urlConnection.disconnect();
-                    }
-
+                    HttpRequest httpRequest = HttpRequest.get(urlString+city).connectTimeout(TIMEOUT).readTimeout(TIMEOUT_READ).followRedirects(true);;
+                    urlConnection = httpRequest.getConnection();
+                    response = httpRequest.body();
                 }
                 catch (Exception e) {
                     exception = e;
                     e.printStackTrace();
                 }
 
-                HashMap<String, Object> data = new HashMap<String, Object>();
+                HashMap<String, Object> data = new HashMap<>();
                 data.put("response", response);
                 data.put("connection", urlConnection);
                 data.put("exception", exception);
@@ -133,19 +105,6 @@ public class Services {
                 }
             }
         }.execute();
-    }
-
-    private static String readStream(InputStream inputStream) throws IOException
-    {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-        StringBuilder out = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            out.append(line);
-        }
-        reader.close();
-
-        return out.toString();
     }
 
 

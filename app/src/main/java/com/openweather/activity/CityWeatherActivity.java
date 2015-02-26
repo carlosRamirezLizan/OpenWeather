@@ -1,27 +1,37 @@
 package com.openweather.activity;
 
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.nostra13.universalimageloader.cache.disc.naming.Md5FileNameGenerator;
+import com.nostra13.universalimageloader.cache.memory.impl.WeakMemoryCache;
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.assist.QueueProcessingType;
 import com.openweather.R;
 import com.openweather.Services;
 import com.openweather.Utils;
 import com.openweather.entity.City;
 import com.openweather.entity.error.ApiError;
-
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 /**
- * Created by Ignacio Rojas González and Carlos Ramírez Lizán on 16/01/2015
+ * Created by Carlos Ramírez Lizán on 16/01/2015
  * Narami Solutions Inc.
  */
 public class CityWeatherActivity extends ActionBarActivity {
 
     public static final String CITY = "city";
+    private static final String GET_WEATHER_ICON_URL = "http://openweathermap.org/img/w/";
+
     String city_name;
     private TextView titleTextView, currentTemperatureTextView, windTextView,
             mainWeatherDescriptionTextView, pressureTextView, humidityTextView, sunriseTextView, sunsetTextView,
@@ -75,6 +85,7 @@ public class CityWeatherActivity extends ActionBarActivity {
         sunriseTextView = (TextView) findViewById(R.id.sunriseTextView);
         sunsetTextView = (TextView) findViewById(R.id.sunsetTextView);
         geoBoundsTextView = (TextView) findViewById(R.id.geoBoundsTextView);
+        iconImageView = (ImageView) findViewById(R.id.iconImageView);
 
         loadDataInView();
     }
@@ -97,5 +108,24 @@ public class CityWeatherActivity extends ActionBarActivity {
         sunriseTextView.setText(sunrise);
         sunsetTextView.setText(sunset);
         geoBoundsTextView.setText("lat: " + city.getCoordinates().getLat() + " long: "+ city.getCoordinates().getLon());
+
+        DisplayImageOptions options = new DisplayImageOptions.Builder()
+                .cacheInMemory(true)
+                .cacheOnDisc(true)
+                .imageScaleType(ImageScaleType.IN_SAMPLE_INT)
+                .bitmapConfig(Bitmap.Config.RGB_565)
+                .build();
+
+        ImageLoaderConfiguration config = new ImageLoaderConfiguration.Builder(getBaseContext())
+                .threadPriority(Thread.NORM_PRIORITY - 2)
+                .memoryCache(new WeakMemoryCache())
+                .discCacheFileNameGenerator(new Md5FileNameGenerator())
+                .tasksProcessingOrder(QueueProcessingType.LIFO)
+                .defaultDisplayImageOptions(options)
+                .build();
+        // Initialize ImageLoader with configuration.
+        ImageLoader.getInstance().init(config);
+
+        ImageLoader.getInstance().displayImage(GET_WEATHER_ICON_URL + city.getWeather().get(0).getIcon()+".png", iconImageView);
     }
 }

@@ -3,16 +3,16 @@ package com.openweather.entity.error;
 import com.google.gson.annotations.SerializedName;
 
 /**
- * Created by Ignacio Rojas González and Carlos Ramírez Lizán on 16/01/2015
+ * Created by Carlos Ramírez Lizán on 16/01/2015
  * Narami Solutions Inc.
  */
 public class ApiError {
 
     public String message;
     @SerializedName("cod")
-    private int code;
+    private String code;
 
-    public ApiError(String message, int code) {
+    public ApiError(String message, String code) {
         this.message = message;
         this.code = code;
     }
@@ -28,11 +28,11 @@ public class ApiError {
         this.message = message;
     }
 
-    public int getCode() {
+    public String getCode() {
         return code;
     }
 
-    public void setCode(int code) {
+    public void setCode(String code) {
         this.code = code;
     }
 
